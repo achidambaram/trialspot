@@ -136,7 +136,7 @@ Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use
 ### Roles
 
 - **Supervisor** - Opens the command center dashboard on a desktop browser. Monitors all operators, views the live activity feed, tracks checklist progress, manages tasks, and triggers the final verdict.
-- **Operator** - Opens the operator view on a mobile device. Walks through venue zones, captures images for AI analysis, uses voice commands, and manually verifies checklist items.
+- **Operator** - Opens the operator view on a mobile device. Walks through venue zones, captures images for AI analysis, and uses voice commands to verify checklist items.
 
 ### Inspection Flow
 
@@ -186,9 +186,6 @@ Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use
   - *"Moving to the seating area"*
   - *"Exit entrance zone"*
 - The system parses your speech, matches it to checklist items, and updates their status
-
-**Manual verification:**
-- Tap any checklist item and mark it as **Verified** or **Flagged**
 
 ### Triggering the Verdict
 
