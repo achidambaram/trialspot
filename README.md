@@ -160,89 +160,42 @@ Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use
 
 ## Sample Use Case: Hackathon Venue Inspection
 
-This walkthrough demonstrates a complete inspection using API calls. Replace `EVENT_ID` and `OPERATOR_ID` with the actual IDs returned.
+### Supervisor (Desktop)
 
-### Step 1: Create an event
+1. Open the tunnel URL in a desktop browser
+2. Enter event name (e.g. "HackSF 2026") and room name (e.g. "Main Hall"), then click **Create Event**
+3. The command center dashboard opens — you can now monitor operators, view the checklist, and watch the activity feed in real-time
 
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/event/create \
-  -H "Content-Type: application/json" \
-  -d '{"name": "HackSF 2026", "roomName": "Main Hall"}'
-```
+### Operator (Mobile)
 
-Returns session data with `id` (your `EVENT_ID`), 6 zones, and 12 checklist items.
+1. Open the same tunnel URL on a mobile phone — it auto-redirects to the operator view
+2. Enter your name and tap **Join**
+3. Navigate to a zone (e.g. tap **Entrance** on the zone list)
 
-### Step 2: Register an operator
+**Using the camera:**
+- Switch to the **Camera** tab
+- Point your phone at the venue and tap **Capture**
+- Gemini Vision analyzes the image, auto-detects your zone, and verifies checklist items it can see
 
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/operators/register \
-  -H "Content-Type: application/json" \
-  -d '{"eventId": "EVENT_ID", "name": "Alice", "deviceId": "phone-001"}'
-```
+**Using voice commands (requires Bodhi server):**
+- Switch to the **Checklist** tab and tap the microphone
+- Say things like:
+  - *"The welcome signage is up and looks good"*
+  - *"Registration desk has power and is set up"*
+  - *"The stage lighting is broken, needs repair"*
+  - *"Moving to the seating area"*
+  - *"Exit entrance zone"*
+- The system parses your speech, matches it to checklist items, and updates their status
 
-### Step 3: Enter a zone
+**Manual verification:**
+- Tap any checklist item and mark it as **Verified** or **Flagged**
 
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/spatial/enter-zone \
-  -H "Content-Type: application/json" \
-  -d '{"eventId": "EVENT_ID", "zoneId": "ENTRANCE_ZONE_ID", "operatorId": "OPERATOR_ID"}'
-```
+### Triggering the Verdict
 
-### Step 4: Capture and analyze an image
-
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/vision/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "eventId": "EVENT_ID",
-    "operatorId": "OPERATOR_ID",
-    "imageBase64": "<base64-encoded-image>",
-    "mimeType": "image/jpeg"
-  }'
-```
-
-Gemini analyzes the image, auto-detects the zone, identifies verified checklist items, and flags issues.
-
-### Step 5: Submit a voice/text inspection update
-
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/inspection/update \
-  -H "Content-Type: application/json" \
-  -d '{
-    "eventId": "EVENT_ID",
-    "rawText": "The welcome signage is set up and visible at the entrance. Registration desk has power.",
-    "currentZone": "entrance"
-  }'
-```
-
-The parser matches text against checklist items and updates their status.
-
-### Step 6: Exit the zone
-
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/spatial/exit-zone \
-  -H "Content-Type: application/json" \
-  -d '{"eventId": "EVENT_ID", "zoneId": "ENTRANCE_ZONE_ID", "operatorId": "OPERATOR_ID"}'
-```
-
-The spatial reasoning engine checks for missed critical/required items and creates tasks if needed.
-
-### Step 7: Trigger the final verdict
-
-```bash
-curl -X POST https://your-tunnel-url.trycloudflare.com/api/event/EVENT_ID/verdict
-```
-
-Returns the overall readiness status, any alerts for skipped zones or unverified items, and open tasks.
-
-### Using the UI Instead
-
-1. Open **https://your-tunnel-url.trycloudflare.com** in a desktop browser
-2. Enter an event name and room name, then click **Create Event**
-3. The command center dashboard opens with the zone map, checklist, and activity feed
-4. Open **https://your-tunnel-url.trycloudflare.com/event/EVENT_ID/operator** on a mobile device (or use responsive mode in DevTools)
-5. Register as an operator, navigate through zones, capture images, and verify items
-6. Watch the dashboard update in real-time as operators work
+Once all zones have been walked and items inspected, the supervisor clicks **Request Verdict** on the dashboard. The system:
+- Checks for any skipped zones or unverified critical items
+- Generates alerts and tasks for anything missing
+- Sets the overall readiness to **READY**, **PARTIAL**, or **BLOCKED**
 
 ---
 
