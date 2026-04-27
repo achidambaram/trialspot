@@ -160,39 +160,67 @@ Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use
 
 ## Sample Use Case: Hackathon Venue Inspection
 
-### Supervisor (Desktop)
+### Setup
 
-1. Open the tunnel URL in a desktop browser
-2. Enter event name (e.g. "HackSF 2026") and room name (e.g. "Main Hall"), then click **Create Event**
-3. The command center dashboard opens — you can now monitor operators, view the checklist, and watch the activity feed in real-time
+1. Open the tunnel URL on a **desktop browser** — enter event name (e.g. "HackSF 2026") and room name (e.g. "Main Hall"), then click **Create Event**
+2. The command center dashboard opens — leave this open to watch progress in real-time
+3. Open the same tunnel URL on a **mobile phone** — it auto-redirects to the operator view
+4. Enter your name and tap **Join**
 
-### Operator (Mobile)
+### Walkthrough Script
 
-1. Open the same tunnel URL on a mobile phone — it auto-redirects to the operator view
-2. Enter your name and tap **Join**
-3. Navigate to a zone (e.g. tap **Entrance** on the zone list)
+Follow this script zone by zone. Use voice commands (tap the microphone) or the camera (tap **Capture** while pointing at the area). The system parses your speech, matches it to checklist items, and updates their status on the dashboard in real-time.
 
-**Using the camera:**
-- Switch to the **Camera** tab
-- Point your phone at the venue and tap **Capture**
-- Gemini Vision analyzes the image, auto-detects your zone, and verifies checklist items it can see
+**Zone 1 — Entrance Area**
 
-**Using voice commands (requires Bodhi server):**
-- Switch to the **Checklist** tab and tap the microphone
-- Say things like:
-  - *"The welcome signage is up and looks good"*
-  - *"Registration desk has power and is set up"*
-  - *"The stage lighting is broken, needs repair"*
-  - *"Moving to the seating area"*
-  - *"Exit entrance zone"*
-- The system parses your speech, matches it to checklist items, and updates their status
+> *"I am at the entrance."*
+> *"WiFi is connected and working."*
+> *"Fire exit signs are posted and clearly visible."*
+> *"Registration table is set up and ready."*
+> *"I'm done here, exiting the entrance."*
+
+**Zone 2 — Stage Area**
+
+> *"I am at the stage area."*
+> *"The microphone is tested and working."*
+> *"Projector is on and visible from the audience."*
+> *"Screen is positioned correctly."*
+> *"Exiting the stage area."*
+
+**Zone 3 — Seating Area**
+
+> *"I am in the seating area."*
+> *"Chairs are arranged for attendees."*
+> *"Table count looks correct, all tables are in place."*
+> *"Exiting the seating area."*
+
+**Zone 4 — Sponsor Tables**
+
+> *"I am at the sponsor tables."*
+> *"Sponsor tables are set up with signage."*
+> *"Power is available at the sponsor tables."*
+> *"Exiting sponsor tables."*
+
+**Zone 5 — Exit Areas**
+
+> *"I am at the exit areas."*
+> *"Exit paths are clear and unobstructed."*
+> *"Exiting the exit area."*
+
+**Zone 6 — Power Area**
+
+> *"I am in the power area."*
+> *"Power strips are connected and working."*
+> *"Exiting the power area."*
 
 ### Triggering the Verdict
 
-Once all zones have been walked and items inspected, the supervisor clicks **Request Verdict** on the dashboard. The system:
+Back on the desktop dashboard, click **Request Verdict**. The system:
 - Checks for any skipped zones or unverified critical items
 - Generates alerts and tasks for anything missing
 - Sets the overall readiness to **READY**, **PARTIAL**, or **BLOCKED**
+
+If all items were verified across all zones, the readiness will be **READY**.
 
 ---
 
