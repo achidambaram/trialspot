@@ -52,6 +52,9 @@ export function Dashboard({ eventId }: { eventId: string }) {
 
   useEffect(() => {
     fetchState();
+    // Poll every 3s as fallback in case realtime misses updates
+    const poll = setInterval(fetchState, 3000);
+    return () => clearInterval(poll);
   }, [fetchState]);
 
   useEffect(() => {

@@ -110,7 +110,11 @@ export function OperatorMobile({ eventId }: { eventId: string }) {
     setLoading(false);
   }, [eventId]);
 
-  useEffect(() => { fetchState(); }, [fetchState]);
+  useEffect(() => {
+    fetchState();
+    const poll = setInterval(fetchState, 3000);
+    return () => clearInterval(poll);
+  }, [fetchState]);
 
   // ── Realtime ──
   useEffect(() => {
