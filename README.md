@@ -164,7 +164,7 @@ Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use
 
 1. Open the tunnel URL on a **desktop browser** — enter event name (e.g. "HackSF 2026") and room name (e.g. "Main Hall"), then click **Create Event**
 2. The command center dashboard opens — leave this open to watch progress in real-time
-3. Open the same tunnel URL on a **mobile phone** — it auto-redirects to the operator view
+3. Open **tunnelURL/operator** on a **mobile phone** — make sure you have `/operator` at the end to join from your phone. It auto-redirects to the operator view
 4. Enter your name and tap **Join**
 
 ### Walkthrough Script
