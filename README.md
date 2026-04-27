@@ -26,7 +26,8 @@ Supervisors monitor progress from a command center dashboard while operators wal
 - **Supabase** project (free tier works)
 - **Google Gemini API key** ([Get one here](https://aistudio.google.com/apikey))
 - *(Optional)* SpatialReal credentials for avatar rendering
-- *(Optional)* Cloudflare tunnel or similar for exposing the Bodhi voice server
+- **Cloudflare Tunnel** (`cloudflared`) for exposing the app over HTTPS (required for mobile camera access)
+  - Install: `brew install cloudflared` (macOS) or see [Cloudflare docs](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
 
 ---
 
@@ -86,22 +87,36 @@ Create `bodhi-server/.env`:
 ```env
 GEMINI_API_KEY=your-gemini-api-key
 GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-api-key
-TRIALRUN_URL=http://localhost:3000
+TRIALRUN_URL=https://your-cloudflare-tunnel-url.trycloudflare.com
 BODHI_PORT=9900
 ```
 
 ### 5. Run the application
 
+The app requires a Cloudflare tunnel because mobile devices need HTTPS to access the camera. The Next.js config already allows `*.trycloudflare.com` origins.
+
 ```bash
-# Terminal 1 - Next.js app
+# Terminal 1 - Next.js dev server
 npm run dev
 
-# Terminal 2 - Bodhi voice server (optional)
-cd bodhi-server
-npm run dev
+# Terminal 2 - Cloudflare tunnel (exposes the app over HTTPS)
+cloudflared tunnel --url https://your-tunnel-url.trycloudflare.com
 ```
 
-The app runs at **http://localhost:3000**.
+This gives you a public URL like `https://random-words.trycloudflare.com`. Use this URL to access the app from any device.
+
+```bash
+# Terminal 3 - Bodhi voice server (optional, for voice input)
+cd bodhi-server
+npm run dev
+
+# Terminal 4 - Tunnel for Bodhi server (if using voice)
+cloudflared tunnel --url http://localhost:9900
+```
+
+Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use `wss://` prefix).
+
+> **Note:** Cloudflare tunnel URLs change each restart. Update `.env.local` and restart the dev server when they change.
 
 ---
 
@@ -150,7 +165,7 @@ This walkthrough demonstrates a complete inspection using API calls. Replace `EV
 ### Step 1: Create an event
 
 ```bash
-curl -X POST http://localhost:3000/api/event/create \
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/event/create \
   -H "Content-Type: application/json" \
   -d '{"name": "HackSF 2026", "roomName": "Main Hall"}'
 ```
@@ -160,7 +175,7 @@ Returns session data with `id` (your `EVENT_ID`), 6 zones, and 12 checklist item
 ### Step 2: Register an operator
 
 ```bash
-curl -X POST http://localhost:3000/api/operators/register \
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/operators/register \
   -H "Content-Type: application/json" \
   -d '{"eventId": "EVENT_ID", "name": "Alice", "deviceId": "phone-001"}'
 ```
@@ -168,7 +183,7 @@ curl -X POST http://localhost:3000/api/operators/register \
 ### Step 3: Enter a zone
 
 ```bash
-curl -X POST http://localhost:3000/api/spatial/enter-zone \
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/spatial/enter-zone \
   -H "Content-Type: application/json" \
   -d '{"eventId": "EVENT_ID", "zoneId": "ENTRANCE_ZONE_ID", "operatorId": "OPERATOR_ID"}'
 ```
@@ -176,7 +191,7 @@ curl -X POST http://localhost:3000/api/spatial/enter-zone \
 ### Step 4: Capture and analyze an image
 
 ```bash
-curl -X POST http://localhost:3000/api/vision/analyze \
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/vision/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "eventId": "EVENT_ID",
@@ -191,7 +206,7 @@ Gemini analyzes the image, auto-detects the zone, identifies verified checklist 
 ### Step 5: Submit a voice/text inspection update
 
 ```bash
-curl -X POST http://localhost:3000/api/inspection/update \
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/inspection/update \
   -H "Content-Type: application/json" \
   -d '{
     "eventId": "EVENT_ID",
@@ -205,7 +220,7 @@ The parser matches text against checklist items and updates their status.
 ### Step 6: Exit the zone
 
 ```bash
-curl -X POST http://localhost:3000/api/spatial/exit-zone \
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/spatial/exit-zone \
   -H "Content-Type: application/json" \
   -d '{"eventId": "EVENT_ID", "zoneId": "ENTRANCE_ZONE_ID", "operatorId": "OPERATOR_ID"}'
 ```
@@ -215,17 +230,17 @@ The spatial reasoning engine checks for missed critical/required items and creat
 ### Step 7: Trigger the final verdict
 
 ```bash
-curl -X POST http://localhost:3000/api/event/EVENT_ID/verdict
+curl -X POST https://your-tunnel-url.trycloudflare.com/api/event/EVENT_ID/verdict
 ```
 
 Returns the overall readiness status, any alerts for skipped zones or unverified items, and open tasks.
 
 ### Using the UI Instead
 
-1. Open **http://localhost:3000** in a desktop browser
+1. Open **https://your-tunnel-url.trycloudflare.com** in a desktop browser
 2. Enter an event name and room name, then click **Create Event**
 3. The command center dashboard opens with the zone map, checklist, and activity feed
-4. Open **http://localhost:3000/event/EVENT_ID/operator** on a mobile device (or use responsive mode in DevTools)
+4. Open **https://your-tunnel-url.trycloudflare.com/event/EVENT_ID/operator** on a mobile device (or use responsive mode in DevTools)
 5. Register as an operator, navigate through zones, capture images, and verify items
 6. Watch the dashboard update in real-time as operators work
 
