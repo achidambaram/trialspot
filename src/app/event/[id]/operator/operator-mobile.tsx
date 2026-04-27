@@ -70,6 +70,7 @@ export function OperatorMobile({ eventId }: { eventId: string }) {
   const [cameraMode, setCameraMode] = useState<"idle" | "live" | "analyzing" | "result">("idle");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [capturing, setCapturing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -244,16 +245,23 @@ export function OperatorMobile({ eventId }: { eventId: string }) {
 
   const startCamera = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-      });
+      // On mobile Safari, request camera permission with simpler constraints first
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        });
+      } catch {
+        // Fallback: try without facing mode constraint
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       streamRef.current = stream;
       setAnalysisResult(null);
       setPreview(null);
-      // Set mode first so the <video> element renders
       setCameraMode("live");
     } catch (err) {
       console.error("Camera error:", err);
+      window.alert("Camera access denied. Please allow camera permissions and try again.");
     }
   }, []);
 
@@ -316,12 +324,17 @@ export function OperatorMobile({ eventId }: { eventId: string }) {
   const capture = useCallback(async () => {
     const v = videoRef.current, c = canvasRef.current;
     if (!v || !c) return;
-    c.width = v.videoWidth; c.height = v.videoHeight;
-    c.getContext("2d")?.drawImage(v, 0, 0);
-    const url = c.toDataURL("image/jpeg", 0.8);
-    setPreview(url);
-    // Don't stop the stream — keep camera live for broadcast to command center
-    await analyzeImage(url.split(",")[1], "image/jpeg");
+    if (!v.videoWidth || !v.videoHeight) return;
+    setCapturing(true);
+    try {
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      c.getContext("2d")!.drawImage(v, 0, 0);
+      const url = c.toDataURL("image/jpeg", 0.8);
+      setPreview(url);
+      await analyzeImage(url.split(",")[1], "image/jpeg");
+    } finally {
+      setCapturing(false);
+    }
   }, [analyzeImage]);
 
   const handleGallery = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -444,8 +457,10 @@ export function OperatorMobile({ eventId }: { eventId: string }) {
             )}
             {cameraMode === "live" && (
               <div className="space-y-2">
-                <button onClick={capture} className="w-full bg-green-600 hover:bg-green-500 text-white py-4 rounded-xl text-base font-bold">
-                  Capture + Analyze
+                <button onClick={capture} disabled={capturing} className={`w-full ${capturing ? "bg-yellow-600" : "bg-green-600 hover:bg-green-500"} text-white py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2`}>
+                  {capturing ? (
+                    <><span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />Analyzing...</>
+                  ) : "Capture + Analyze"}
                 </button>
                 <button
                   onClick={() => {
