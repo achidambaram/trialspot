@@ -44,9 +44,13 @@ export function Dashboard({ eventId }: { eventId: string }) {
   const [liveOperatorIds, setLiveOperatorIds] = useState<Set<string>>(new Set());
 
   const fetchState = useCallback(async () => {
-    const res = await fetch(`/api/event/${eventId}`);
-    const data = await res.json();
-    setState(data);
+    try {
+      const res = await fetch(`/api/event/${eventId}`);
+      const data = await res.json();
+      if (data.session) {
+        setState(data);
+      }
+    } catch { /* ignore fetch errors */ }
     setLoading(false);
   }, [eventId]);
 
@@ -84,7 +88,15 @@ export function Dashboard({ eventId }: { eventId: string }) {
     );
   }
 
-  const openTasks = state.tasks.filter(t => t.status === "open").length;
+  // Default empty arrays for fields that may be missing after a data wipe
+  const tasks = state.tasks || [];
+  const items = state.items || [];
+  const zones = state.zones || [];
+  const alerts = state.alerts || [];
+  const operators = state.operators || [];
+  const activities = state.activities || [];
+
+  const openTasks = tasks.filter(t => t.status === "open").length;
 
   const tabs: { key: RightTab; label: string; badge?: number }[] = [
     { key: "voice", label: "Voice" },
@@ -115,14 +127,14 @@ export function Dashboard({ eventId }: { eventId: string }) {
         {/* LEFT: Map + Checklist */}
         <div className="col-span-3 flex flex-col gap-3 min-h-0 overflow-auto">
           <InteractiveMap
-            zones={state.zones}
-            items={state.items}
-            tasks={state.tasks}
+            zones={zones}
+            items={items}
+            tasks={tasks}
             spatial={state.spatial}
-            alerts={state.alerts}
-            operators={state.operators.filter(op => liveOperatorIds.has(op.id))}
+            alerts={alerts}
+            operators={operators.filter(op => liveOperatorIds.has(op.id))}
           />
-          <ChecklistPanel items={state.items} zones={state.zones} />
+          <ChecklistPanel items={items} zones={zones} />
         </div>
 
         {/* CENTER: Avatar + Activity Feed */}
@@ -136,7 +148,7 @@ export function Dashboard({ eventId }: { eventId: string }) {
           </div>
           {/* Activity Feed — fills remaining space */}
           <div className="flex-1 min-h-0 overflow-auto">
-            <ActivityFeed activities={state.activities} />
+            <ActivityFeed activities={activities} />
           </div>
         </div>
 
@@ -170,15 +182,15 @@ export function Dashboard({ eventId }: { eventId: string }) {
             {/* Always mounted so broadcast subscription stays alive */}
             <div className={rightTab === "feeds" ? "" : "hidden"}>
               <OperatorFeeds
-                operators={state.operators}
-                zones={state.zones}
+                operators={operators}
+                zones={zones}
                 eventId={eventId}
                 onLiveOperatorsChange={setLiveOperatorIds}
               />
             </div>
             {rightTab === "tasks" && (
               <TaskList
-                tasks={state.tasks}
+                tasks={tasks}
                 onResolve={async (taskId) => {
                   await fetch("/api/tasks/update", {
                     method: "POST",
@@ -191,7 +203,7 @@ export function Dashboard({ eventId }: { eventId: string }) {
             {rightTab === "controls" && (
               <OperatorControls
                 eventId={eventId}
-                zones={state.zones}
+                zones={zones}
                 spatial={state.spatial}
               />
             )}

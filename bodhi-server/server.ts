@@ -30,8 +30,14 @@ let sessionRef: VoiceSession | null = null;
 
 async function getEventState() {
   if (!currentEventId) return null;
-  const res = await fetch(`${TRIALRUN_URL}/api/event/${currentEventId}`);
-  return res.json();
+  try {
+    const res = await fetch(`${TRIALRUN_URL}/api/event/${currentEventId}`);
+    const data = await res.json();
+    if (!data.session) return null;
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 // ============================================================
@@ -235,14 +241,15 @@ Call this AUTOMATICALLY after every enter_zone call. Do NOT wait for the operato
     const { zone_name } = args as { zone_name: string };
     if (!currentEventId) return { status: "no_session" };
     const eventData = await getEventState();
-    const zone = eventData.zones.find((z: { name: string }) => z.name === zone_name);
+    if (!eventData) return { status: "no_data" };
+    const zone = (eventData.zones || []).find((z: { name: string }) => z.name === zone_name);
     if (!zone) return { tasks: [], items: [] };
 
-    const tasks = eventData.tasks.filter(
+    const tasks = (eventData.tasks || []).filter(
       (t: { status: string; related_zone_id: string | null }) =>
         t.status === "open" && t.related_zone_id === zone.id
     );
-    const unverifiedItems = eventData.items.filter(
+    const unverifiedItems = (eventData.items || []).filter(
       (i: { zone_id: string; status: string }) =>
         i.zone_id === zone.id && i.status === "unverified"
     );
@@ -275,10 +282,11 @@ Call this AUTOMATICALLY after every exit_zone call. Do NOT wait for the operator
     const { zone_name } = args as { zone_name: string };
     if (!currentEventId) return { status: "no_session" };
     const eventData = await getEventState();
-    const zone = eventData.zones.find((z: { name: string }) => z.name === zone_name);
+    if (!eventData) return { status: "no_data" };
+    const zone = (eventData.zones || []).find((z: { name: string }) => z.name === zone_name);
     if (!zone) return { status: "zone_not_found" };
 
-    const zoneItems = eventData.items.filter(
+    const zoneItems = (eventData.items || []).filter(
       (i: { zone_id: string }) => i.zone_id === zone.id
     );
     const verified = zoneItems.filter((i: { status: string }) => i.status === "verified");

@@ -9,7 +9,7 @@
     "@ai-sdk/google": "^1.0.0",
     "@google/genai": "^1.50.1",
     "ai": "^6.0.168",
-    "bodhi-realtime-agent": "file:../../bodhi_realtime_agent",
+    "bodhi-realtime-agent": "^0.2.0",
     "dotenv": "^16.4.0",
     "ws": "^8.20.0",
     "zod": "^3.23.0"
