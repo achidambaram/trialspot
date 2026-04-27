@@ -54,7 +54,7 @@ supabase/migration-004-replica-identity.sql  # Realtime optimization
 
 ### 3. Configure environment variables
 
-Create a `.env.local` file in the project root:
+Create a `.env` file in the project root:
 
 ```env
 # Supabase
@@ -114,9 +114,9 @@ npm run dev
 cloudflared tunnel --url http://localhost:9900
 ```
 
-Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env.local` with the Bodhi tunnel URL (use `wss://` prefix).
+Update `NEXT_PUBLIC_BODHI_WS_URL` in `.env` with the Bodhi tunnel URL (use `wss://` prefix).
 
-> **Note:** Cloudflare tunnel URLs change each restart. Update `.env.local` and restart the dev server when they change.
+> **Note:** Cloudflare tunnel URLs change each restart. Update `.env` and restart the dev server when they change.
 
 ---
 
