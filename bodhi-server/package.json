@@ -1,0 +1,20 @@
+{
+  "name": "trialrun-bodhi-server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^1.0.0",
+    "@google/genai": "^1.50.1",
+    "ai": "^6.0.168",
+    "bodhi-realtime-agent": "file:../../bodhi_realtime_agent",
+    "dotenv": "^16.4.0",
+    "ws": "^8.20.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}
